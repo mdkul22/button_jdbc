@@ -47,10 +47,12 @@ public class databaseUpdater implements MqttCallback{
 		insertQuery update = new insertQuery(s);
 		if(topic.equals("tqb/topic"))
 		{
-			
+			insertQuery inserter = new insertQuery(update);
+			insert.insertAlertRow();
 		}
 		if(topic.equals("tqb/setup")){
-			
+			insertQuery inserter = new insertQuery(update);
+			inserter.insertSetupRow();
 		}
 
 		

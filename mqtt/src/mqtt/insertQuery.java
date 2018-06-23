@@ -77,6 +77,7 @@ public void insertAlertRow() {
 
     }while(itr.hasNext());
     alertkey = val[1];
+    String alertVal = jsonObj.getString(alertkey);
 	try{
 		Class.forName("com.mysql.jdbc.Driver");
 		System.out.println("Connecting to the database");
@@ -85,14 +86,15 @@ public void insertAlertRow() {
 		System.out.println("Creating statement..");	
 		String sql;
 		sql = "INSERT INTO tqb_alert "   ;
-        sql += "(mac, alert) ";
+        sql += "(mac, alert, alertVal) ";
         sql += "VALUES ";
-        sql += "(" + mac + ", " + alertkey + ");";
+        sql += "(" + mac + ", " + alertkey + ", " + alertVal ");";
 		ResultSet rs = stmt.executeQuery(sql);
 		System.out.println("inserted row!");
 		rs.close();
 		stmt.close();
 		conn.close();
+		// delete the sql table and restart table again
 		}
 	catch(SQLException se){
 		se.printStackTrace();
@@ -111,5 +113,7 @@ public void insertAlertRow() {
 	}
 System.out.println("Exit insert alert method!");
 }
-
+public void checkAlert(){
+	
+}
 }
