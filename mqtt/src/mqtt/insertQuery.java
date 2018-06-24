@@ -59,7 +59,7 @@ public void insertSetupRow() {
 System.out.println("Exit insert setup method!");
 }
 
-public void insertAlertRow() {
+public String insertAlertRow() {
 	Connection conn = null;
 	Statement stmt =  null;
 	JSONObject jsonObj = new JSONObject(row);
@@ -89,18 +89,22 @@ public void insertAlertRow() {
         sql += "(mac, alert, alertVal) ";
         sql += "VALUES ";
         sql += "(" + mac + ", " + alertkey + ", " + alertVal ");";
+		
 		ResultSet rs = stmt.executeQuery(sql);
 		System.out.println("inserted row!");
 		rs.close();
 		stmt.close();
 		conn.close();
+		return mac;
 		// delete the sql table and restart table again
 		}
 	catch(SQLException se){
 		se.printStackTrace();
+		return "-1";
 		}
 	catch(Exception e){
 		e.printStackTrace();
+		return "-1";
 		}
 	finally{
 		try{
@@ -109,11 +113,9 @@ public void insertAlertRow() {
 		}
 		catch(SQLException se){
 			se.printStackTrace();
+			return "-1";
 		}
 	}
 System.out.println("Exit insert alert method!");
-}
-public void checkAlert(){
-	
 }
 }
