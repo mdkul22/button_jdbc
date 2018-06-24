@@ -118,4 +118,64 @@ public String insertAlertRow() {
 	}
 System.out.println("Exit insert alert method!");
 }
+public String tableLinker(String mac)
+{
+String mac = mac;
+Connection conn = null;
+Statement stmt =  null;
+try{
+Class.forName("com.mysql.jdbc.Driver");
+System.out.println("Connecting to the database");
+conn = DriverManager.getConnection(DB_URL, USER, PASS);
+stmt = conn.createStatement();
+System.out.println("Creating statement..");
+String sql;
+sql = "select building, floor, posX, posY from tqb_setup where mac=" + mac + ";";
+ResultSet rs = stmt.executeQuery(sql);
+
+while(rs.next()){
+String building = rs.getString("building");
+String floor = rs.getString("floor");
+String posX = rs.getString("posX");
+String posY = rs.getString("posY");
+System.out.print("building: " + building);
+}
+sql = "select from tqb_alert where mac=" + mac + ";";
+rs = stmt.executeQuery(sql);
+while(rs.next()){
+String alert = rs.getString("alert");
+String alertval = rs.getString("alertVal");
+}
+rs.close();
+stmt.close();
+conn.close();
+// writing string json which will be published to be read by mobiles
+String json;
+json += "{";
+json += "\"building\": " + building + ",";
+json += "\"floor\": " + floor + ",";
+json += "\"posX\": " + posX + ",";
+json += "\"posY\": " + posY + ",";
+json += "\"alert\": " + alert;
+json += "}";
+return json;
+
+}
+catch(SQLException se){
+se.printStackTrace();
+}
+catch(Exception e){
+e.printStackTrace();
+}
+finally{
+try{
+if(conn!=null)
+conn.close();
+}
+catch(SQLException se){
+se.printStackTrace();
+}
+}
+System.out.println("BYE");
+}
 }
