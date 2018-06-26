@@ -23,8 +23,8 @@ public class databaseUpdater implements MqttCallback{
 			client = new MqttClient("tcp://173.39.91.82:1883", "Sending");
 			client.connect();
 			client.setCallback(this);
-			client.subscribe("tqb/topic");
-			client.subscribe("tqb/alert");
+			client.subscribe("tqb/setup", 0);
+			client.subscribe("tqb/topic", 0);
 			MqttMessage message = new MqttMessage();
 			message.setPayload("Lets start this stuff!".getBytes());
 			client.publish("tqb/begin", message);
@@ -44,21 +44,27 @@ public class databaseUpdater implements MqttCallback{
 		System.out.println(message);
 		byte obj[] = message.getPayload();
 		String s = new String(obj);
-		insertQuery update = new insertQuery(s);
 		if(topic.equals("tqb/topic"))
 		{
-			insertQuery inserter = new insertQuery(update);
+			insertQuery inserter = new insertQuery(s);
 			String mac = inserter.insertAlertRow();
-			if(mac,equals("-1"))
-				continue;
+			if(mac.equals("-1"))
+				return;
+			if(mac.equals("D"))
+			{
+				System.out.println("Deleted row as alertVal = 0");
+				return; 
+			}
 			String pubmsg = inserter.tableLinker(mac);
-			client.publish("tqb/mobile", pubmsg);
+			MqttMessage msg = new MqttMessage();
+			msg.setPayload(pubmsg.getBytes());
+			client.publish("tqb/mobile", msg);
 		}
 		if(topic.equals("tqb/setup")){
-			insertQuery inserter = new insertQuery(update);
+			System.out.println("Entered setup1");
+			insertQuery inserter = new insertQuery(s);
 			inserter.insertSetupRow();
 		}
-
 		
 	}
 

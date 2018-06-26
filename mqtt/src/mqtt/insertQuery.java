@@ -18,11 +18,13 @@ public void insertSetupRow() {
 	Connection conn = null;
 	Statement stmt =  null;
 	JSONObject jsonObj = new JSONObject(row);
+	System.out.println("Extract the JSONs");
 	String mac = jsonObj.getString("mac");
 	String building = jsonObj.getString("building");
 	String floor = jsonObj.getString("floor");
 	String posX = jsonObj.getString("posX");
 	String posY = jsonObj.getString("posY");
+	System.out.println("try block!");
 	try{
 		Class.forName("com.mysql.jdbc.Driver");
 		System.out.println("Connecting to the database");
@@ -33,11 +35,11 @@ public void insertSetupRow() {
 		sql = "INSERT INTO tqb_setup "   ;
         sql += "(mac, building, floor, posX, posY) ";
         sql += "VALUES ";
-        sql += "(" + mac + ", " + building + ", ";
-        sql += floor + ", " + posX + ", " + posY + ");";
-		ResultSet rs = stmt.executeQuery(sql);
+        sql += "('" + mac + "', '" + building + "', '";
+        sql += floor + "', '" + posX + "', '" + posY + "');";
+		int rs = stmt.executeUpdate(sql);
 		System.out.println("inserted row!");
-		rs.close();
+
 		stmt.close();
 		conn.close();
 		}
@@ -67,37 +69,50 @@ public String insertAlertRow() {
 	// getting keys of json
     Set<String> keys = jsonObj.keySet();	
     Iterator itr = keys.iterator();
-    String[] val = new String[2];
-    int i = 0;
     String alertkey;
     do{
-        val[i] = itr.next().toString();
-        System.out.println(val[i]);
-        i++;
-
+    	alertkey = itr.next().toString();
+        if(!alertkey.equals("mac"))
+        	break;
+       
     }while(itr.hasNext());
-    alertkey = val[1];
     String alertVal = jsonObj.getString(alertkey);
+    System.out.println("alert value = " + alertVal);
 	try{
 		Class.forName("com.mysql.jdbc.Driver");
 		System.out.println("Connecting to the database");
 		conn = DriverManager.getConnection(DB_URL, USER, PASS);
 		stmt = conn.createStatement();
+		if(alertVal.equals("1"))
+		{
 		System.out.println("Creating statement..");	
 		String sql;
-		sql = "INSERT INTO tqb_alert "   ;
+		sql = "INSERT INTO table_alert "   ;
         sql += "(mac, alert, alertVal) ";
-        sql += "VALUES ";
-        sql += "(" + mac + ", " + alertkey + ", " + alertVal ");";
-		
-		ResultSet rs = stmt.executeQuery(sql);
-		System.out.println("inserted row!");
-		rs.close();
+        sql += "SELECT * FROM (SELECT '" +  mac + "','" +  alertkey + "','" + alertVal + "') AS tmp";
+		sql += " WHERE NOT EXISTS (";
+		sql += "SELECT mac FROM table_alert WHERE mac = '" + mac + "' && alert='" + alertkey + "'";
+		sql += ") LIMIT 1;";
+		int rs = stmt.executeUpdate(sql);
+		System.out.println("inserted row! " + rs);
 		stmt.close();
 		conn.close();
 		return mac;
 		// delete the sql table and restart table again
 		}
+		else if (alertVal.equals("0")) {
+			System.out.println("Creating delete statement..");	
+			String sql;
+			sql = "DELETE FROM table_alert "   ;
+			sql += "WHERE mac='" + mac + "' && " + "alert='" + alertkey+"';";
+			int rs = stmt.executeUpdate(sql);
+			System.out.println("deleted row!");
+			stmt.close();
+			conn.close();
+			return "D";
+		}
+		return "-1";
+	}
 	catch(SQLException se){
 		se.printStackTrace();
 		return "-1";
@@ -115,42 +130,48 @@ public String insertAlertRow() {
 			se.printStackTrace();
 			return "-1";
 		}
+	System.out.println("Exit insert alert method!");
 	}
-System.out.println("Exit insert alert method!");
 }
+
 public String tableLinker(String mac)
 {
-String mac = mac;
 Connection conn = null;
 Statement stmt =  null;
 try{
+System.out.println("mac is "+mac);
 Class.forName("com.mysql.jdbc.Driver");
 System.out.println("Connecting to the database");
 conn = DriverManager.getConnection(DB_URL, USER, PASS);
 stmt = conn.createStatement();
 System.out.println("Creating statement..");
 String sql;
-sql = "select building, floor, posX, posY from tqb_setup where mac=" + mac + ";";
+sql = "select building, floor, posX, posY from tqb_setup where mac='" + mac + "';";
 ResultSet rs = stmt.executeQuery(sql);
-
+String building = new String();
+String floor= new String();
+String posX= new String();
+String posY= new String();
+String alert= new String();
+String alertval= new String();
 while(rs.next()){
-String building = rs.getString("building");
-String floor = rs.getString("floor");
-String posX = rs.getString("posX");
-String posY = rs.getString("posY");
+ building = rs.getString("building");
+ floor = rs.getString("floor");
+ posX = rs.getString("posX");
+ posY = rs.getString("posY");
 System.out.print("building: " + building);
 }
-sql = "select from tqb_alert where mac=" + mac + ";";
+sql = "SELECT * FROM table_alert WHERE mac='" + mac + "';";
 rs = stmt.executeQuery(sql);
 while(rs.next()){
-String alert = rs.getString("alert");
-String alertval = rs.getString("alertVal");
+alert = rs.getString("alert");
+alertval = rs.getString("alertVal");
 }
 rs.close();
 stmt.close();
 conn.close();
 // writing string json which will be published to be read by mobiles
-String json;
+String json = new String();
 json += "{";
 json += "\"building\": " + building + ",";
 json += "\"floor\": " + floor + ",";
@@ -163,19 +184,22 @@ return json;
 }
 catch(SQLException se){
 se.printStackTrace();
+return "-1";
 }
 catch(Exception e){
 e.printStackTrace();
+return "-1";
 }
 finally{
 try{
 if(conn!=null)
 conn.close();
+System.out.println("BYE");
 }
 catch(SQLException se){
 se.printStackTrace();
+return "-1";
 }
 }
-System.out.println("BYE");
 }
 }
