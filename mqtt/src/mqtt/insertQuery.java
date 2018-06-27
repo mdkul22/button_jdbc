@@ -17,13 +17,15 @@ row = x;
 public void insertSetupRow() {
 	Connection conn = null;
 	Statement stmt =  null;
+	try{
 	JSONObject jsonObj = new JSONObject(row);
-	System.out.println("Extract the JSONs");
 	String mac = jsonObj.getString("mac");
 	String building = jsonObj.getString("building");
 	String floor = jsonObj.getString("floor");
 	String posX = jsonObj.getString("posX");
 	String posY = jsonObj.getString("posY");
+	System.out.println("Extract the JSONs");
+	
 	System.out.println("try block!");
 	try{
 		Class.forName("com.mysql.jdbc.Driver");
@@ -39,7 +41,6 @@ public void insertSetupRow() {
         sql += floor + "', '" + posX + "', '" + posY + "');";
 		int rs = stmt.executeUpdate(sql);
 		System.out.println("inserted row!");
-
 		stmt.close();
 		conn.close();
 		}
@@ -58,14 +59,22 @@ public void insertSetupRow() {
 			se.printStackTrace();
 		}
 	}
+	}
+	catch(JSONException e)
+	{	
+		System.out.println("JSON ERROR!");
+		return;
+	}
+	
 System.out.println("Exit insert setup method!");
 }
 
 public String insertAlertRow() {
 	Connection conn = null;
 	Statement stmt =  null;
+	try {
 	JSONObject jsonObj = new JSONObject(row);
-	String mac = jsonObj.getString("mac");
+	String mac = jsonObj.getString("mac");	
 	// getting keys of json
     Set<String> keys = jsonObj.keySet();	
     Iterator itr = keys.iterator();
@@ -132,6 +141,12 @@ public String insertAlertRow() {
 		}
 	System.out.println("Exit insert alert method!");
 	}
+	}
+	catch(JSONException e)
+	{
+		return "-1";
+	}
+	
 }
 
 public String tableLinker(String mac)
@@ -146,7 +161,7 @@ conn = DriverManager.getConnection(DB_URL, USER, PASS);
 stmt = conn.createStatement();
 System.out.println("Creating statement..");
 String sql;
-sql = "select building, floor, posX, posY from tqb_setup where mac='" + mac + "';";
+sql = "select mac, building, floor, posX, posY from tqb_setup where mac='" + mac + "';";
 ResultSet rs = stmt.executeQuery(sql);
 String building = new String();
 String floor= new String();
@@ -173,6 +188,7 @@ conn.close();
 // writing string json which will be published to be read by mobiles
 String json = new String();
 json += "{";
+json += "\"mac\": " + mac + ",";
 json += "\"building\": " + building + ",";
 json += "\"floor\": " + floor + ",";
 json += "\"posX\": " + posX + ",";

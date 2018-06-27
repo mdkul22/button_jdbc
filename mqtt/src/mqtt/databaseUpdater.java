@@ -20,7 +20,7 @@ public class databaseUpdater implements MqttCallback{
 
 	public void beginSubscribe() {
 		try{
-			client = new MqttClient("tcp://173.39.91.82:1883", "Sending");
+			client = new MqttClient("tcp://iot.eclipse.org:1883", "Sending");
 			client.connect();
 			client.setCallback(this);
 			client.subscribe("tqb/setup", 0);
